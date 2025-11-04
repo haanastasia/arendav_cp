@@ -35,15 +35,20 @@ class TelegramNotificationService
         try {
             $text = "🚗 📋 НОВАЯ ЗАЯВКА!\n\n";
             $text .= "🆔 #{$trip->id}\n";
-            $text .= "📍 Маршрут: {$trip->from_city} → {$trip->to_city}\n";
-            $text .= "👤 Клиент: {$trip->client_name}\n";
+            $text .= "📍 Адрес подачи: {$trip->address} \n";
+            $text .= "👤 Клиент: {$trip->client_name} \n";
             
             if ($trip->load_date) {
-                $text .= "📅 Загрузка: " . \Carbon\Carbon::parse($trip->load_date)->format('d.m.Y H:i') . "\n";
+                $text .= "📅 Дата создания: " . \Carbon\Carbon::parse($trip->load_date)->format('d.m.Y H:i') . "\n";
             }
             
-            if ($trip->delivery_date) {
-                $text .= "🚚 Доставка: " . \Carbon\Carbon::parse($trip->delivery_date)->format('d.m.Y H:i') . "\n";
+            if ($trip->date) {
+                $text .= "📅 Дата: " . \Carbon\Carbon::parse($trip->date)->format('d.m.Y') . "\n";
+            }
+            
+            // Если есть время, добавляем его
+            if ($trip->time) {
+                $text .= "⏰ Время: {$trip->time}\n";
             }
             
             $text .= "\n💡 Заявка ожидает вашего подтверждения!";

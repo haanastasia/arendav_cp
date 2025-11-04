@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Set;
 use Filament\Tables\Filters\Indicator;
 use Carbon\Carbon;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+// use pxlrbt\FilamentExcel\Columns\Column;
+// use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class TripResource extends Resource
 {
@@ -97,18 +100,6 @@ class TripResource extends Resource
                 
                 Forms\Components\Section::make('Финансовая информация')
                     ->schema([
-                        Forms\Components\Select::make('payment_type')
-                            ->label('Тип оплаты')
-                            ->options([
-                                'н' => 'н',
-                                'ндс' => 'ндс', 
-                                'бн' => 'бн',
-                            ])
-                            ->reactive() // Делаем поле реактивным
-                            ->afterStateUpdated(function ($set, $state, $get) {
-                                // Пересчитываем при изменении типа оплаты
-                                self::calculateFinancialFields($set, $get);
-                            }),
                         
                         Forms\Components\TextInput::make('amount')
                             ->label('Сумма Заявки')
@@ -125,6 +116,19 @@ class TripResource extends Resource
                             ->prefix('₽')
                             ->reactive()
                             ->afterStateUpdated(function ($set, $state, $get) {
+                                self::calculateFinancialFields($set, $get);
+                            }),
+
+                        Forms\Components\Select::make('payment_type')
+                            ->label('Тип оплаты')
+                            ->options([
+                                'н' => 'н',
+                                'ндс' => 'ндс', 
+                                'бн' => 'бн',
+                            ])
+                            ->reactive() // Делаем поле реактивным
+                            ->afterStateUpdated(function ($set, $state, $get) {
+                                // Пересчитываем при изменении типа оплаты
                                 self::calculateFinancialFields($set, $get);
                             }),
                         
@@ -274,6 +278,15 @@ class TripResource extends Resource
                     ->label('№ авто')
                     ->searchable(),
             ])
+            // ->headerActions([
+            //     ExportAction::make()
+            //         ->exports([
+            //             ExcelExport::make()
+            //                 ->fromTable()
+            //                 ->withFilename(fn () => 'заявки_' . now()->format('d-m-Y'))
+            //                 ->modifyQueryUsing(fn ($query) => $query->with('driver'))
+            //         ]),
+            // ])
             ->filters([
                 Tables\Filters\SelectFilter::make('driver')
                     ->label('Водитель')
