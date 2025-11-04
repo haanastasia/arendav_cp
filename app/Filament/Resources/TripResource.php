@@ -67,12 +67,14 @@ class TripResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Статус заявки')
                             ->options([
+                                'Новая'      => 'Новая',    
                                 'В работе'   => 'В работе',
                                 'Выполнена'  => 'Выполнена', 
                                 'Отменена'   => 'Отменена',
                                 'Перенесена' => 'Перенесена', 
+                                'Отклонена'  => 'Отклонена', 
                             ])
-                            ->default('В работе'),
+                            ->default('Новая'),
                     ])->columns(2),
                 
                 Forms\Components\Section::make('Техническая информация')
@@ -248,10 +250,12 @@ class TripResource extends Resource
                     ->label('Статус')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'В работе'   => 'warning',
-                        'Выполнена'  => 'success',
-                        'Отменена'   => 'danger',
-                        'Перенесена' => 'info',
+                        'Новая'      => 'gray',     // Серый - ожидает действий
+                        'В работе'   => 'warning',  // Оранжевый - в процессе
+                        'Выполнена'  => 'success',  // Зеленый - завершено успешно
+                        'Отменена'   => 'danger',   // Красный - отменено
+                        'Перенесена' => 'info',     // Голубой - перенесено
+                        'Отклонена'  => 'danger',   // Красный - отклонено водителем
                     }),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Сумма')
@@ -280,9 +284,12 @@ class TripResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Статус')
                     ->options([
-                        'В работе' => 'В работе',
-                        'Выполнена' => 'Выполнена',
-                        'Отменена' => 'Отменена',
+                        'Новая'      => 'Новая',    
+                        'В работе'   => 'В работе',
+                        'Выполнена'  => 'Выполнена', 
+                        'Отменена'   => 'Отменена',
+                        'Перенесена' => 'Перенесена', 
+                        'Отклонена'  => 'Отклонена', 
                     ]),
                     
                 Tables\Filters\Filter::make('date')
@@ -362,5 +369,12 @@ class TripResource extends Resource
         $dispatcherAmount = $actualAmount * ($dispatcherPercent / 100);
         $total = $actualAmount + $techAmount + $dispatcherAmount + $vat;
         $set('total', number_format($total, 2, '.', ''));
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\WaybillsRelationManager::class,
+        ];
     }
 }

@@ -15,6 +15,10 @@ class LatestTrips extends BaseWidget
                 ->icon('heroicon-o-document-text')
                 ->color('primary'),
                 
+            Stat::make('Свободные', Trip::where('status', 'Новые')->count())
+                ->icon('heroicon-o-queue-list')
+                ->color('warning'),
+
             Stat::make('В работе', Trip::where('status', 'В работе')->count())
                 ->icon('heroicon-o-clock')
                 ->color('warning'),
@@ -23,9 +27,9 @@ class LatestTrips extends BaseWidget
                 ->icon('heroicon-o-check-badge')
                 ->color('success'),
                 
-            Stat::make('Отменено', Trip::where('status', 'Отменена')->count())
-                ->icon('heroicon-o-x-circle')
-                ->color('danger'),
+            // Stat::make('Отменено', Trip::where('status', 'Отменена')->count())
+            //     ->icon('heroicon-o-x-circle')
+            //     ->color('danger'),
         ];
     }
 }
