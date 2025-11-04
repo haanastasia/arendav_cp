@@ -1,0 +1,26 @@
+{
+    "actions": {
+        "attach": "Прикрепить",
+        "create": "Создать",
+        "delete": "Удалить",
+        "detach": "Открепить",
+        "edit": "Редактировать",
+        "force_delete": "Удалить навсегда",
+        "replicate": "Копировать",
+        "restore": "Восстановить"
+    },
+    "fields": {
+        "name": "Название",
+        "email": "Email",
+        "password": "Пароль",
+        "remember_me": "Запомнить меня"
+    },
+    "resources": {
+        "create": "Создать :label",
+        "edit": "Редактировать :label",
+        "list": "Список :label"
+    },
+    "tables": {
+        "empty": "Нет записей"
+    }
+}
