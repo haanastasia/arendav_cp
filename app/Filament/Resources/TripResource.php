@@ -53,9 +53,13 @@ class TripResource extends Resource
                         Forms\Components\TimePicker::make('time')
                             ->label('Время')
                             ->seconds(false),
-                        Forms\Components\TextInput::make('dispatcher')
+                        Forms\Components\Select::make('dispatcher_id')  
                             ->label('Диспетчер')
-                            ->maxLength(255),
+                            ->relationship('dispatcher', 'name')  
+                            ->searchable()
+                            ->preload()
+                            ->default(auth()->id()) // Текущий пользователь по умолчанию
+                             ->options(\App\Models\User::where('id', '!=', 1)->pluck('name', 'id')), // Исключаем админа
                         Forms\Components\TextInput::make('client_name')
                             ->label('Наименование клиента')
                             ->required()

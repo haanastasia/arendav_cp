@@ -198,13 +198,21 @@ class TelegramController extends Controller
     private function showTripDetails($trip, $chatId)
     {
         $text = "📋 ДЕТАЛИ ЗАЯВКИ #{$trip->id}\n\n";
-        $text .= "📍 Адрес подачи: {$trip->address} \n";
-        $text .= "👤 Клиент: {$trip->client_name}\n";
-        //$text .= "📅 Дата создания: " . Carbon::parse($trip->load_date)->format('d.m.Y H:i') . "\n";
-        $text .= "🚚 Дата: " . Carbon::parse($trip->date)->format('d.m.Y') . "\n";
-        $text .= "⏰ Время: {$trip->time} \n";
-        $text .= "📊 Статус: {$trip->status}\n\n";
+        $text .= "• Адрес подачи: {$trip->address} \n";
+        $text .= "• Клиент: {$trip->client_name}\n";
+        //$text .= "• Дата создания: " . Carbon::parse($trip->load_date)->format('d.m.Y H:i') . "\n";
+        $text .= "• Дата: " . Carbon::parse($trip->date)->format('d.m.Y') . "\n";
+        $text .= "• Время: {$trip->time} \n";
+        $text .= "• Статус: {$trip->status}\n";
 
+        if(!empty($trip->hours_driver)) {
+            $text .= "• Час: {$trip->hours_driver}\n";
+        }
+
+        if(!empty($trip->km_driver)) {
+            $text .= "• Км: {$trip->km_driver}\n";
+        }
+         
         $keyboard = [
             'inline_keyboard' => [
                 [

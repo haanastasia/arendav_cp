@@ -14,7 +14,7 @@ class Trip extends Model
         'name',
         'date',
         'time', 
-        'dispatcher',
+        'dispatcher_id',
         'client_name',
         'client_type',
         'status',
@@ -52,6 +52,11 @@ class Trip extends Model
     public function waybills()
     {
         return $this->hasMany(Waybill::class);
+    }
+
+    public function dispatcher()
+    {
+        return $this->belongsTo(User::class, 'dispatcher_id');
     }
     
 }
