@@ -54,6 +54,31 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->renderHook(
+                'panels::head.end',
+                fn (): string => '
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+                '
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn (): string => '
+                    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+                    <script>
+                        document.addEventListener(\'DOMContentLoaded\', function() {
+                            Fancybox.bind(\'[data-fancybox]\', {
+                                Toolbar: {
+                                    display: {
+                                        left: [\'infobar\'],
+                                        middle: [],
+                                        right: [\'close\'],
+                                    },
+                                },
+                            });
+                        });
+                    </script>
+                '
+            );
     }
 }

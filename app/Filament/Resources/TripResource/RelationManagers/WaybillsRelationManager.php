@@ -65,16 +65,22 @@ class WaybillsRelationManager extends RelationManager
             ])
             ->headerActions([])
             ->actions([
+                Tables\Actions\Action::make('show')
+                    ->label('Просмотр')
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->url(function ($record) {
+                        return asset('storage/' . $record->file_path);
+                    })
+                    ->extraAttributes([
+                        'data-fancybox' => 'gallery',
+                        'data-caption' => 'Просмотр файла',
+                    ]),
                 Tables\Actions\Action::make('download')
                     ->label('Скачать')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(function ($record) {
                         // Принудительно генерируем правильный URL
                         $url = asset('storage/' . $record->file_path);
-                        \Log::info('Generated download URL', [
-                            'file_path' => $record->file_path,
-                            'generated_url' => $url
-                        ]);
                         return $url;
                     })
                     ->openUrlInNewTab(),

@@ -82,7 +82,8 @@ class DriverResource extends Resource
                         return '❌ Не в боте';
                     })
                     ->badge()
-                    ->color(fn ($state) => $state ? 'success' : 'danger'),
+                    ->color(fn ($state) => $state ? 'success' : 'danger')
+                    ->default('❌ Не в боте'),
             ])
             ->filters([
                 // Фильтр по статусу регистрации
