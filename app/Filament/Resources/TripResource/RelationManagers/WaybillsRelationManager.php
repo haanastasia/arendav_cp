@@ -24,9 +24,6 @@ class WaybillsRelationManager extends RelationManager
                     ->label('Имя файла')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('file_size')
-                    ->label('Размер')
-                    ->suffix(' bytes'),
                 Forms\Components\TextInput::make('uploaded_at')
                     ->label('Загружен')
                     ->formatStateUsing(fn ($state) => $state?->format('d.m.Y H:i')),
@@ -38,22 +35,39 @@ class WaybillsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('file_name') // ← меняем на file_name
             ->columns([
-                Tables\Columns\TextColumn::make('file_name')
+                Tables\Columns\ImageColumn::make('file_path')
                     ->label('Файл')
-                    ->formatStateUsing(function ($state, $record) {
-                        $extension = pathinfo($state, PATHINFO_EXTENSION);
-                        return match($extension) {
-                            'jpg', 'jpeg', 'png' => '🖼️ Фото',
-                            'pdf' => '📄 PDF документ',
-                            'xlsx', 'xls' => '📊 Excel файл',
-                            'doc', 'docx' => '📝 Word документ',
-                            default => '📎 Файл'
+                    ->getStateUsing(function ($record) {
+                        // Проверяем, является ли файл изображением
+                        $extension = pathinfo($record->file_name, PATHINFO_EXTENSION);
+                        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                        
+                        if (in_array(strtolower($extension), $imageExtensions)) {
+                            return asset('storage/' . $record->file_path);
+                        }
+                    
+                        return null;
+                    })
+                    ->defaultImageUrl(function ($record) {
+                        // Иконки для разных типов файлов
+                        $extension = pathinfo($record->file_name, PATHINFO_EXTENSION);
+                        
+                        return match(strtolower($extension)) {
+                            'pdf' => 'https://cdn-icons-png.flaticon.com/512/337/337946.png',
+                            'xlsx', 'xls' => 'https://cdn-icons-png.flaticon.com/512/732/732220.png',
+                            'doc', 'docx' => 'https://cdn-icons-png.flaticon.com/512/732/732222.png',
+                            'txt' => 'https://cdn-icons-png.flaticon.com/512/8242/8242936.png',
+                            'zip', 'rar' => 'https://cdn-icons-png.flaticon.com/512/136/136526.png',
+                            default => 'https://cdn-icons-png.flaticon.com/512/136/136521.png', // общая иконка файла
                         };
                     })
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('file_size')
-                    ->label('Размер')
-                    ->formatStateUsing(fn ($state) => number_format($state / 1024, 1) . ' KB'),
+                    ->extraImgAttributes(['class' => 'rounded-lg shadow-sm'])
+                    ->width(550)  
+                    ->height('auto')  
+                    ->square(false)  
+                    ->circular(false)  
+                    ->toggleable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('uploaded_at')
                     ->label('Загружен')
                     ->dateTime('d.m.Y H:i'),
@@ -65,16 +79,6 @@ class WaybillsRelationManager extends RelationManager
             ])
             ->headerActions([])
             ->actions([
-                Tables\Actions\Action::make('show')
-                    ->label('Просмотр')
-                    ->icon('heroicon-o-magnifying-glass')
-                    ->url(function ($record) {
-                        return asset('storage/' . $record->file_path);
-                    })
-                    ->extraAttributes([
-                        'data-fancybox' => 'gallery',
-                        'data-caption' => 'Просмотр файла',
-                    ]),
                 Tables\Actions\Action::make('download')
                     ->label('Скачать')
                     ->icon('heroicon-o-arrow-down-tray')

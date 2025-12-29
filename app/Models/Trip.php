@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\TelegramNotificationService;
 
 class Trip extends Model
 {
@@ -23,9 +24,9 @@ class Trip extends Model
         'payment_type',
         'address',
         'notes',
-        'has_waybill',
         'height', 
         'car_number',
+        'type_t',
         'actual_amount',
         'tech_amount',
         'dispatcher_percent',
@@ -41,8 +42,80 @@ class Trip extends Model
         'hours_dispatcher',
         'hours_driver', 
         'km_dispatcher',
-        'km_driver',
+        'km_driver',    
+        'document',
+        'comment',
+        'telegram_sent',
+        'telegram_sent_at',
+        'telegram_sent_count',
     ];
+
+    protected $casts = [
+        'document'         => 'array',
+        'telegram_sent'    => 'boolean',
+        'telegram_sent_at' => 'datetime',
+    ];
+
+    protected static function booted()
+    {
+        static::updated(function ($trip) {
+            // Пропускаем если обновляются только технические поля
+            $technicalFields = ['telegram_sent', 'telegram_sent_at', 'telegram_sent_count'];
+            $dirtyFields = array_keys($trip->getDirty());
+            
+            // Если изменились только технические поля - не обрабатываем
+            if (count(array_diff($dirtyFields, $technicalFields)) === 0) {
+                return;
+            }
+            
+            // 1. Останавливаем напоминания если статус изменился
+            if ($trip->isDirty('status')) {
+                $originalStatus = $trip->getOriginal('status');
+                $newStatus = $trip->status;
+                
+                \Log::info('Trip status changed', [
+                    'trip_id' => $trip->id,
+                    'from' => $originalStatus,
+                    'to' => $newStatus
+                ]);
+                
+                // Если был статус "Новая", а стал любой другой - останавливаем напоминания
+                if ($originalStatus === 'Новая' && $newStatus !== 'Новая') {
+                    try {
+                        app(\App\Services\TelegramNotificationService::class)
+                            ->stopRemindersForTrip($trip);
+                        \Log::info('Reminders stopped due to status change', [
+                            'trip_id' => $trip->id
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::error('Error stopping reminders: ' . $e->getMessage());
+                    }
+                }
+            }
+            
+            // 2. Автоматически отправляем уведомление об отмене
+            // Только если статус изменился НА "Отменена"
+            if ($trip->isDirty('status') && $trip->status === 'Отменена') {
+                try {
+                    app(\App\Services\TelegramNotificationService::class)
+                        ->sendCancellationNotification($trip);
+                } catch (\Exception $e) {
+                    \Log::error('Error sending cancellation notification: ' . $e->getMessage());
+                }
+            }
+            
+            // 3. Смена водителя
+            if ($trip->isDirty('driver_id')) {
+                // Останавливаем напоминания для старого водителя
+                try {
+                    app(\App\Services\TelegramNotificationService::class)
+                        ->stopRemindersForTrip($trip);
+                } catch (\Exception $e) {
+                    \Log::error('Error stopping reminders: ' . $e->getMessage());
+                }
+            }
+        });
+    }
 
     public function driver(): BelongsTo
     {
@@ -58,5 +131,40 @@ class Trip extends Model
     {
         return $this->belongsTo(User::class, 'dispatcher_id');
     }
-    
+
+    // Метод для проверки
+    public function getHasTelegramSentAttribute(): bool
+    {
+        return $this->telegram_sent;
+    }
+
+    // Метод для отметки отправки
+    public function markTelegramSent(): self
+    {
+        $this->update([
+            'telegram_sent' => true,
+            'telegram_sent_at' => now(),
+            'telegram_sent_count' => $this->telegram_sent_count + 1,
+        ]);
+        
+        return $this;
+    }
+
+    // Для получения первого документа 
+    public function getFirstDocumentAttribute()
+    {
+        return !empty($this->document) ? $this->document[0] : null;
+    }
+
+    // Для получения количества документов
+    public function getDocumentsCountAttribute()
+    {
+        return !empty($this->document) ? count($this->document) : 0;
+    }
+
+    // Для проверки наличия документов
+    public function hasDocuments(): bool
+    {
+        return !empty($this->document) && count($this->document) > 0;
+    }
 }

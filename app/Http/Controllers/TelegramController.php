@@ -198,20 +198,25 @@ class TelegramController extends Controller
     private function showTripDetails($trip, $chatId)
     {
         $text = "📋 ДЕТАЛИ ЗАЯВКИ #{$trip->id}\n\n";
-        $text .= "• Адрес подачи: {$trip->address} \n";
-        $text .= "• Клиент: {$trip->client_name}\n";
+        //$text .= "• Адрес подачи: {$trip->address} \n";
+        //$text .= "• Клиент: {$trip->client_name}\n";
         //$text .= "• Дата создания: " . Carbon::parse($trip->load_date)->format('d.m.Y H:i') . "\n";
-        $text .= "• Дата: " . Carbon::parse($trip->date)->format('d.m.Y') . "\n";
-        $text .= "• Время: {$trip->time} \n";
+        //$text .= "• Дата: " . Carbon::parse($trip->date)->format('d.m.Y') . "\n";
+        //$text .= "• Время: {$trip->time} \n";
         $text .= "• Статус: {$trip->status}\n";
 
-        if(!empty($trip->hours_driver)) {
-            $text .= "• Час: {$trip->hours_driver}\n";
+        if ($trip->comment) {
+            $text .= "📍 Детали: \n";
+            $text .= "{$trip->comment}\n";
         }
 
-        if(!empty($trip->km_driver)) {
-            $text .= "• Км: {$trip->km_driver}\n";
-        }
+        // if(!empty($trip->hours_driver)) {
+        //     $text .= "• Час: {$trip->hours_driver}\n";
+        // }
+
+        // if(!empty($trip->km_driver)) {
+        //     $text .= "• Км: {$trip->km_driver}\n";
+        // }
          
         $keyboard = [
             'inline_keyboard' => [
@@ -298,8 +303,8 @@ class TelegramController extends Controller
         if ($trip->status == 'Выполнена') {
             $text = "✅ ЗАЯВКА ВЫПОЛНЕНА #{$trip->id}\n\n";
             $text .= "📋 Детали:\n";
-            $text .= "• Адрес подачи: {$trip->address} \n";
-            $text .= "• Клиент: {$trip->client_name}\n";
+            //$text .= "• Адрес подачи: {$trip->address} \n";
+            //$text .= "• Клиент: {$trip->client_name}\n";
             $text .= "🎉 Заявка успешно завершена!";
             
             $keyboard = [
@@ -316,19 +321,17 @@ class TelegramController extends Controller
         } else {
             // Стандартное меню для активных заявок
             $text = "✅ ВАША ЗАЯВКА #{$trip->id}\n\n";
-            $text .= "📋 Детали:\n";
-            $text .= "• Адрес подачи: {$trip->address} \n";
-            $text .= "• Клиент: {$trip->client_name}\n";
-            $text .= "🚦 Текущий статус: {$trip->status}";
+            $text .= "📋 Детали: В работе\n";
+            //$text .= "• Адрес подачи: {$trip->address} \n";
+            //$text .= "• Клиент: {$trip->client_name}\n";
+            //$text .= "🚦 Текущий статус: {$trip->status}";
 
             $keyboard = [
                 'inline_keyboard' => [
                     [
                         ['text' => '📄 Путевой лист', 'callback_data' => 'waybill_' . $trip->id],
-                        ['text' => '📍 Изменить статус', 'callback_data' => 'status_menu_' . $trip->id],
-                    ],
-                    [
-                        ['text' => '🔄 Обновить', 'callback_data' => 'refresh_trip_' . $trip->id],
+                        //['text' => '🔄 Обновить', 'callback_data' => 'refresh_trip_' . $trip->id],
+                        //['text' => '📍 Изменить статус', 'callback_data' => 'status_menu_' . $trip->id],
                     ]
                 ]
             ];
@@ -451,15 +454,20 @@ class TelegramController extends Controller
         // Отправляем каждую заявку отдельным сообщением
         foreach ($trips as $trip) {
             $text = "📋 ЗАЯВКА #{$trip->id}\n";
-            $text .= "Адрес подачи: {$trip->address}\n";
-            $text .= "Клиент: {$trip->client_name}\n";
-            $text .= "Дата: " . Carbon::parse($trip->date)->format('d.m.Y');
+            //$text .= "Адрес подачи: {$trip->address}\n";
+            //$text .= "Клиент: {$trip->client_name}\n";
+            //$text .= "Дата: " . Carbon::parse($trip->date)->format('d.m.Y');
+            
+            if ($trip->comment) {
+                $text .= "📍 Детали: \n";
+                $text .= "{$trip->comment}\n";
+            }
 
             $keyboard = [
                 'inline_keyboard' => [
                     [
                         ['text' => '✅ Взять заявку', 'callback_data' => 'trip_take_' . $trip->id],
-                        ['text' => '👀 Подробнее', 'callback_data' => 'trip_details_' . $trip->id],
+                        //['text' => '👀 Подробнее', 'callback_data' => 'trip_details_' . $trip->id],
                     ]
                 ]
             ];
@@ -492,14 +500,18 @@ class TelegramController extends Controller
 
         foreach ($trips as $trip) {
             $text = "🚗 ЗАЯВКА #{$trip->id}\n";
-            $text .= "Адрес подачи: {$trip->address} \n";
+            //$text .= "Адрес подачи: {$trip->address} \n";
             $text .= "Статус: {$trip->status}\n";
-            $text .= "Дата: " . Carbon::parse($trip->date)->format('d.m.Y');
- 
+            //$text .= "Дата: " . Carbon::parse($trip->date)->format('d.m.Y');
+            if ($trip->comment) {
+                $text .= "📍 Детали: \n";
+                $text .= "{$trip->comment}\n";
+            }
+
             $keyboard = [
                 'inline_keyboard' => [
                     [
-                        ['text' => '📍 Изменить статус', 'callback_data' => 'status_menu_' . $trip->id],
+                        //['text' => '📍 Изменить статус', 'callback_data' => 'status_menu_' . $trip->id],
                         ['text' => '📄 Путевой лист', 'callback_data' => 'waybill_' . $trip->id],
                     ]
                 ]
@@ -605,7 +617,7 @@ class TelegramController extends Controller
         $message = "{$title}\n\n";
         
         foreach ($trips as $trip) {
-            $message .= "🆔 #{$trip->id} - {$trip->name}\n";
+            $message .= "🆔 #{$trip->id}\n";
             $message .= "📅 {$trip->date} - 👤 {$trip->client_name}\n\n";
         }
 

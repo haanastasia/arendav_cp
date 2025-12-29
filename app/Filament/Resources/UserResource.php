@@ -24,6 +24,16 @@ class UserResource extends Resource
     protected static ?string $modelLabel = 'Диспетчер';
     protected static ?string $pluralModelLabel = 'Диспетчеры';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->isAdmin();
+    }
+    
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->isAdmin();
+    }
+    
     public static function form(Form $form): Form
     {
         return $form
@@ -47,6 +57,15 @@ class UserResource extends Resource
                     ->dehydrated(fn ($state) => filled($state))
                     ->required(fn (string $context): bool => $context === 'create')
                     ->minLength(8),
+
+                Forms\Components\Select::make('role')
+                    ->label('Роль')
+                    ->options([
+                        'admin' => 'Администратор',
+                        'moderator' => 'Модератор',
+                    ])
+                    ->default('moderator')
+                    ->required(),
             ]);
     }
 
@@ -63,7 +82,22 @@ class UserResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
-                    
+
+                Tables\Columns\TextColumn::make('role')
+                    ->label('Роль')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'danger',
+                        'moderator' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'admin' => 'Администратор',
+                        'moderator' => 'Модератор',
+                        default => $state,
+                    })
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime()
