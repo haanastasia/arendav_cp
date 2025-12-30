@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\Rule;
 
 class DriverResource extends Resource
 {
@@ -39,6 +40,12 @@ class DriverResource extends Resource
                     ->label('Telegram @username')
                     ->prefix('@')
                     ->maxLength(255)
+                    ->regex('/^[a-zA-Z0-9_@]+$/') // Разрешает только латинские буквы, цифры и _
+                    ->unique(ignoreRecord: true) // Уникальность в таблице
+                    ->validationMessages([
+                        'regex' => 'Используйте только латинские буквы, цифры и нижнее подчёркивание. Пример: johndoe_123',
+                        'max' => 'Username не может быть длиннее 32 символов',
+                    ])
                     ->helperText('Укажите @username водителя в Telegram'),
             Forms\Components\TextInput::make('telegram_chat_id')
                 ->label('Telegram Chat ID')

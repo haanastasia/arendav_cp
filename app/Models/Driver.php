@@ -22,4 +22,16 @@ class Driver extends Model
         return $this->hasMany(Waybill::class);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // При сохранении модели
+        static::saving(function ($driver) {
+            // Если username пустой или null, сбрасываем chat_id
+            if (empty($driver->telegram_username)) {
+                $driver->telegram_chat_id = null;
+            }
+        });
+    }
 }
