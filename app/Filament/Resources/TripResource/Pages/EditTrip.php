@@ -45,4 +45,26 @@ class EditTrip extends EditRecord
             ]);
         }
     }
+    
+    protected function getFormActions(): array
+    {
+        if (!auth()->user()->canEdit()) {
+            return [];
+        }
+        
+        return [
+            $this->getSaveFormAction(),
+            $this->getSaveAndStayFormAction(),
+            $this->getCancelFormAction(),
+        ];
+    }
+
+    public function mount($record): void
+    {
+        parent::mount($record);
+        
+        if (!auth()->user()->canEdit()) {
+            $this->form->disabled();
+        }
+    }
 }

@@ -7,10 +7,18 @@ use App\Services\TelegramNotificationService;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class CreateTrip extends CreateRecord
 {
     protected static string $resource = TripResource::class;
+
+    protected function authorizeAccess(): void
+    {
+        if (!auth()->user()->canEdit()) {
+            throw new AuthorizationException('У вас нет прав для создания заявок');
+        }
+    }
 
     protected function afterCreate(): void
     {

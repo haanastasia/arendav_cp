@@ -99,12 +99,15 @@ class DriverResource extends Resource
                     ->query(fn ($query) => $query->whereNotNull('telegram_chat_id')),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (): bool => auth()->user()->canEdit()),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()->canEdit()),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()->canEdit()),
                 ]),
             ])
             // Подсветка строк для незарегистрированных водителей

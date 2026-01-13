@@ -88,11 +88,13 @@ class WaybillsRelationManager extends RelationManager
                         return $url;
                     })
                     ->openUrlInNewTab(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()->canEdit()),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()->canEdit()),
                 ]),
             ])
             ->emptyStateHeading('Нет путевых листов')

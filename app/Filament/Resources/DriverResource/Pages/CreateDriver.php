@@ -9,4 +9,12 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateDriver extends CreateRecord
 {
     protected static string $resource = DriverResource::class;
+
+    protected function authorizeAccess(): void
+    {
+        if (!auth()->user()->canEdit()) {
+            throw new AuthorizationException('У вас нет прав для создания заявок');
+        }
+    }
+
 }

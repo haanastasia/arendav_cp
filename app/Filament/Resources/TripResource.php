@@ -314,7 +314,8 @@ class TripResource extends Resource
                         ->hidden(fn ($get) => !$get('driver_id'))
                         ->visible(fn ($livewire) => 
                             $livewire instanceof Pages\EditTrip && 
-                            $livewire->record->driver_id
+                            $livewire->record->driver_id &&
+                            auth()->user()->canEdit()
                         ),
                 ])
                 ->columnSpanFull() 
@@ -341,6 +342,14 @@ class TripResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('driver.name')
                     ->label('Водитель')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('car_number')
+                    ->label('№ авто')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('dispatcher.name')
+                    ->label('Диспетчер')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
@@ -406,6 +415,12 @@ class TripResource extends Resource
                     ->searchable()
                     ->preload(),
 
+                Tables\Filters\SelectFilter::make('dispatcher')
+                    ->label('Диспетчер')
+                    ->relationship('dispatcher', 'name')
+                    ->searchable()
+                    ->preload(),
+
                 Tables\Filters\SelectFilter::make('type_t')
                     ->label('Тип техники')
                     ->options([
@@ -458,7 +473,8 @@ class TripResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (): bool => auth()->user()->canEdit()),
                 
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn (): bool => auth()->user()->isAdmin()),

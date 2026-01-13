@@ -13,7 +13,30 @@ class EditDriver extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+                ->visible(fn (): bool => auth()->user()->canEdit()),
         ];
+    }
+
+    protected function getFormActions(): array
+    {
+        if (!auth()->user()->canEdit()) {
+            return [];
+        }
+        
+        return [
+            $this->getSaveFormAction(),
+            $this->getSaveAndStayFormAction(),
+            $this->getCancelFormAction(),
+        ];
+    }
+
+    public function mount($record): void
+    {
+        parent::mount($record);
+        
+        if (!auth()->user()->canEdit()) {
+            $this->form->disabled();
+        }
     }
 }

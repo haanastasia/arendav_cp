@@ -63,9 +63,11 @@ class UserResource extends Resource
                     ->options([
                         'admin' => 'Администратор',
                         'moderator' => 'Модератор',
+                        'content' => 'Просмотр',
                     ])
                     ->default('moderator')
-                    ->required(),
+                    ->required()
+                    ->disabled(fn (): bool => !auth()->user()->isAdmin()),
             ]);
     }
 
@@ -89,11 +91,13 @@ class UserResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'admin' => 'danger',
                         'moderator' => 'warning',
+                        'content' => 'info',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'admin' => 'Администратор',
                         'moderator' => 'Модератор',
+                        'content' => 'Просмотр',
                         default => $state,
                     })
                     ->sortable(),
@@ -104,7 +108,13 @@ class UserResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('role')
+                    ->label('Роль')
+                    ->options([
+                        'admin' => 'Администратор',
+                        'moderator' => 'Модератор',
+                        'content' => 'Просмотр',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

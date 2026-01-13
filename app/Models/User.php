@@ -59,4 +59,24 @@ class User extends Authenticatable
     {
         return $this->role === 'moderator';
     }
+
+    public function isContent(): bool
+    {
+        return $this->role === 'content';
+    }
+
+    public function canEdit(): bool
+    {
+        return $this->isAdmin() || $this->isModerator();
+    }
+
+    public function canView(): bool
+    {
+        return $this->isAdmin() || $this->isModerator() || $this->isContent();
+    }
+
+    public function canDelete(): bool
+    {
+        return $this->isAdmin();
+    }
 }
