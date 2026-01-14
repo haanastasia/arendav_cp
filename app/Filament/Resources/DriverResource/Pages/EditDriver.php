@@ -26,7 +26,7 @@ class EditDriver extends EditRecord
         
         return [
             $this->getSaveFormAction(),
-            $this->getSaveAndStayFormAction(),
+            //$this->getSaveAndStayFormAction(),
             $this->getCancelFormAction(),
         ];
     }

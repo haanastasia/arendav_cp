@@ -209,8 +209,14 @@ class TelegramNotificationService
             $text .= "📍 Детали:\n";
             $text .= "{$trip->comment}\n";
         }
-        
-        $text .= "\n💡 Заявка ожидает вашего подтверждения!";
+
+        $dispatcher = $trip->dispatcher;
+
+        $text .= "\n👤 Диспетчер: {$dispatcher->name}\n";
+
+        if (!empty($dispatcher->phone)) {
+            $text .= "📞 {$dispatcher->phone}\n";
+        }
 
         $keyboard = [
             'inline_keyboard' => [
@@ -239,8 +245,14 @@ class TelegramNotificationService
         if ($trip->comment) {
             $text .= "📍 Детали:\n";
             $text .= "{$trip->comment}\n";
-        }
+        }        
         
+        $dispatcher = $trip->dispatcher;
+        $text .= "\n👤 Диспетчер: {$dispatcher->name}\n";
+        if (!empty($dispatcher->phone)) {
+            $text .= "📞 {$dispatcher->phone}\n";
+        }
+
         $createdAt = $trip->created_at ?? now();
         $diff = now()->diff($createdAt);
         $hours = $diff->h;
@@ -372,6 +384,14 @@ class TelegramNotificationService
             }
             
             $text .= "\n⚠️ Заявка была отменена диспетчером.";
+            
+            $dispatcher = $trip->dispatcher;
+
+            $text .= "\n👤 Диспетчер: {$dispatcher->name}\n";
+
+            if (!empty($dispatcher->phone)) {
+                $text .= "📞 {$dispatcher->phone}\n";
+            }
 
             Telegram::sendMessage([
                 'chat_id' => $driver->telegram_chat_id,

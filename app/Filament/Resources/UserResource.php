@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserResource extends Resource
 {
@@ -49,6 +50,21 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
+
+                Forms\Components\TextInput::make('phone')
+                    ->label('Телефон')
+                    ->tel()
+                    ->mask('+7 (999) 999-99-99')
+                    ->placeholder('+7 (___) ___-__-__')
+                    ->maxLength(30)
+                    ->nullable()
+                    ->unique(ignoreRecord: true)
+                    ->stripCharacters(['(', ')', '-', ' ']) // Удаляем символы маски
+                    ->rules(['nullable', 'string', 'max:30'])
+                    ->validationMessages([
+                        'unique' => 'Этот номер телефона уже используется другим пользователем'
+                    ])
+                    ->helperText('Формат: +7 (999) 999-99-99'),
                 
                 Forms\Components\TextInput::make('password')
                     ->label('Пароль')

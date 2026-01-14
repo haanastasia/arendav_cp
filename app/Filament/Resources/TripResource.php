@@ -327,6 +327,8 @@ class TripResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(50)
+            ->defaultSort('id', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('Номер заявки')
