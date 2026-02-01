@@ -392,20 +392,21 @@ class TelegramController extends Controller
 
         $text = "🚗 МОИ ЗАЯВКИ\n\n";
         $text .= "📊 Статистика:\n";
-        $text .= "• Доступно: {$availableTripsCount}\n";
+        //$text .= "• Доступно: {$availableTripsCount}\n";
         $text .= "• Активные: {$activeTripsCount}\n";
         $text .= "• Всего: {$totalTripsCount}\n\n";
  
         $keyboard = [
             'inline_keyboard' => [
                 [
-                    ['text' => '📋 Доступные заявки', 'callback_data' => 'menu_available_trips'],
+                    //['text' => '📋 Доступные заявки', 'callback_data' => 'menu_available_trips'],
                     ['text' => '🚗 В работе', 'callback_data' => 'menu_active_trips'],
-                ],
-                [
-                    //['text' => '📤 Отправить путевой', 'callback_data' => 'menu_send_waybill'],
                     ['text' => '🔄 Обновить', 'callback_data' => 'trips_refresh'],
                 ]
+                // [
+                //     //['text' => '📤 Отправить путевой', 'callback_data' => 'menu_send_waybill'],
+                //     ['text' => '🔄 Обновить', 'callback_data' => 'trips_refresh'],
+                // ]
             ]
         ];
 
@@ -487,7 +488,7 @@ class TelegramController extends Controller
     {
         $trips = Trip::where('driver_id', $driver->id)
             ->where('status', 'В работе')  // ← ТОЛЬКО В РАБОТЕ
-            ->orderBy('load_date', 'asc')
+            ->orderBy('date', 'desc')
             ->get();
 
         if ($trips->isEmpty()) {

@@ -15,7 +15,7 @@ class LatestTrips extends BaseWidget
                 ->icon('heroicon-o-document-text')
                 ->color('primary'),
                 
-            Stat::make('Свободные', Trip::where('status', 'Новые')->count())
+            Stat::make('Свободные', Trip::where('status', 'Новая')->count())
                 ->icon('heroicon-o-queue-list')
                 ->color('warning'),
 

@@ -84,6 +84,7 @@ class TripResource extends Resource
                                 'Отменена'   => 'Отменена',
                                 'Перенесена' => 'Перенесена', 
                                 'Отклонена'  => 'Отклонена', 
+                                'Ремонт'     => 'Ремонт',
                             ])
                             ->default('Новая'),
                         Forms\Components\FileUpload::make('document')
@@ -364,6 +365,7 @@ class TripResource extends Resource
                         'Отменена'   => 'danger',   // Красный - отменено
                         'Перенесена' => 'info',     // Голубой - перенесено
                         'Отклонена'  => 'danger',   // Красный - отклонено водителем
+                        'Ремонт'     => 'info',   // Ремонт авто
                     })
                     ->sortable(),
                 Tables\Columns\IconColumn::make('has_waybill')
@@ -441,6 +443,7 @@ class TripResource extends Resource
                         'Отменена'   => 'Отменена',
                         'Перенесена' => 'Перенесена', 
                         'Отклонена'  => 'Отклонена', 
+                        'Ремонт'     => 'Ремонт', 
                     ]),
                     
                 Tables\Filters\Filter::make('date')
