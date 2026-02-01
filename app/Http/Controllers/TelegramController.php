@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Telegram\Bot\Laravel\Facades\Telegram;
 use Carbon\Carbon;
+use App\Services\TelegramGroupService;
 
 class TelegramController extends Controller
 {
@@ -254,6 +255,18 @@ class TelegramController extends Controller
             'driver_id' => $driver->id,
             'status' => 'В работе'  // ← МЕНЯЕМ СТАТУС
         ]);
+
+        //ОТПРАВКА УВЕДОМЛЕНИЯ В ГРУППУ
+        try {
+            $groupService = app(TelegramGroupService::class);
+            
+            if ($groupService->isConfigured()) {
+                $success = $groupService->notifyDriverAcceptedTrip($trip, $driver);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Ошибка отправки группового уведомления: ' . $e->getMessage());
+            // Не прерываем выполнение из-за ошибки уведомления
+        }
 
         $this->showTripManagement($trip, $chatId);
     }
@@ -735,6 +748,14 @@ class TelegramController extends Controller
                 'has_waybill' => true
             ]);
 
+            // Уведомление в группу о путевом листе
+            try {
+                $groupService = app(\App\Services\TelegramGroupService::class);
+                $groupService->notifyWaybillAttached($trip, $driver, $originalName);
+            } catch (\Exception $e) {
+                \Log::error('Ошибка группового уведомления о путевом листе: ' . $e->getMessage());
+            }
+
             // Очищаем состояние ожидания
             Cache::forget("waiting_waybill_{$chatId}");
 
@@ -855,6 +876,14 @@ class TelegramController extends Controller
             $trip->update([
                 'has_waybill' => true
             ]);
+
+            // Уведомление в группу о путевом листе (фото)
+            try {
+                $groupService = app(\App\Services\TelegramGroupService::class);
+                $groupService->notifyWaybillAttached($trip, $driver, 'Фото');
+            } catch (\Exception $e) {
+                \Log::error('Ошибка группового уведомления о путевом листе (фото): ' . $e->getMessage());
+            }
 
             // Очищаем состояние ожидания
             Cache::forget("waiting_waybill_{$chatId}");

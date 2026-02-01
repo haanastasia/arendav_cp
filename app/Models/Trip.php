@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Services\TelegramNotificationService;
+use App\Services\TelegramGroupService;
 
 class Trip extends Model
 {
@@ -101,6 +102,25 @@ class Trip extends Model
                         ->sendCancellationNotification($trip);
                 } catch (\Exception $e) {
                     \Log::error('Error sending cancellation notification: ' . $e->getMessage());
+                }
+
+                // Уведомление в группу
+                try {
+                    $groupService = app(\App\Services\TelegramGroupService::class);
+                    $success = $groupService->notifyTripCancelled($trip);
+                } catch (\Exception $e) {
+                    \Log::error('Error sending group cancellation notification: ' . $e->getMessage());
+                }
+
+            }
+
+            // статус "Ремонт" 
+            if ($trip->isDirty('status') && $trip->status === 'Ремонт') {
+                try {
+                    // Уведомление в группу о ремонте
+                    app(\App\Services\TelegramGroupService::class)->notifyTripToRepair($trip);
+                } catch (\Exception $e) {
+                    \Log::error('Error sending repair notification: ' . $e->getMessage());
                 }
             }
             
