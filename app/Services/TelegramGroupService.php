@@ -60,7 +60,9 @@ class TelegramGroupService
         
         $message .= "📍 <b>Дата:</b> " . $trip->date . "\n";
         $message .= "📍 <b>Информация:</b> " . $trip->type_t . " " . $trip->car_number . "\n";
-        
+        if ($trip->client_name) {
+            $message .= "👨‍💼 <b>Заказчик:</b> " . $trip->client_name . " (" . $trip->client_inn . ") \n";
+        }
         $message .= "\n🕐 <i>Принято через бота:</i> " . Carbon::now('Europe/Moscow')->format('H:i:s');
         
         return $this->send($message);
@@ -83,12 +85,20 @@ class TelegramGroupService
     {
         $message = "🚫 <b>Заявка #{$trip->id} отменена</b>\n\n";
 
+        if ($trip->reason) {
+            $message .= "📝 <b>Причина отмены:</b> " . $trip->reason . "\n";
+        }
+
         if ($trip->driver) {
             $message .= "👤 <b>Водитель:</b> {$trip->driver->name}\n";
         }
-        
+
         $message .= "📍 <b>Информация:</b> " . $trip->type_t . " " . $trip->car_number . "\n";
-        
+         
+        if ($trip->client_name) {
+            $message .= "👨‍💼 <b>Заказчик:</b> " . $trip->client_name . " (" . $trip->client_inn . ") \n";
+        }
+
         $message .= "\n🕐 <i>Отменена:</i> " . Carbon::now('Europe/Moscow')->format('H:i:s');
         
         return $this->send($message);

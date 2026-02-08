@@ -90,7 +90,26 @@ class TripResource extends Resource
                                 'Отклонена'  => 'Отклонена', 
                                 'Ремонт'     => 'Ремонт',
                             ])
-                            ->default('Новая'),
+                            ->default('Новая')
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                // Если статус меняется с "Отменена" на другой - очищаем поле reason
+                                if ($state !== 'Отменена') {
+                                    $set('reason', null);
+                                }
+                            }),
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Причина отмены')
+                            ->helperText('Обязательно укажите причину отмены заявки')
+                            ->rows(2)
+                            ->maxLength(500)
+                            ->required(fn (Forms\Get $get): bool => 
+                                in_array($get('status'), ['Отменена'])
+                            )
+                            ->visible(fn (Forms\Get $get): bool => 
+                                in_array($get('status'), ['Отменена'])
+                            )
+                            ->columnSpanFull(),
                         Forms\Components\FileUpload::make('document')
                             ->label('Документ')
                             ->helperText('Загрузите один или несколько файлов')
