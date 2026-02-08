@@ -15,11 +15,15 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Set;
 use Filament\Tables\Filters\Indicator;
 use Carbon\Carbon;
-use pxlrbt\FilamentExcel\Exports\ExcelExport;
+//use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Actions;
 use Filament\Notifications\Notification;
+// use Filament\Forms\Components\TextInput;
 // use pxlrbt\FilamentExcel\Columns\Column;
 // use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use MoveMoveIo\DaData\Enums\CompanyStatus;
+use MoveMoveIo\DaData\Enums\CompanyType;
+use MoveMoveIo\DaData\Facades\DaDataCompany;
 
 class TripResource extends Resource
 {
@@ -139,6 +143,55 @@ class TripResource extends Resource
                         Forms\Components\TextInput::make('car_number')
                             ->label('№ авто')
                             ->maxLength(255),
+
+                        Forms\Components\Select::make('client_name')
+                            ->label('Заказчик')
+                            ->searchable()
+                            ->getSearchResultsUsing(function (string $search): array {
+                                if (strlen($search) < 2) {
+                                    return [];
+                                }
+
+                                $suggestions = DaDataCompany::prompt($search, 5, [CompanyStatus::ACTIVE], 2 );
+
+                                $options = [];
+                                foreach ($suggestions['suggestions'] ?? [] as $suggestion) {
+                                    $inn = $suggestion['data']['inn'] ?? '';
+                                    $name = $suggestion['value'] ?? '';
+                                    $address = $suggestion['data']['address']['value'] ?? '';
+                                    
+                                    if (!empty($inn) && !empty($name)) {
+                                        // Формируем отображение с адресом на новой строке
+                                        $displayText = '<div class="flex flex-col">';
+                                        $displayText .= '<div class="font-medium">' . $name . '</div>';
+                                        if ($address) {
+                                            $displayText .= '<div class="text-xs text-gray-500">📍 ' . $address . '</div>';
+                                        }
+                                        $displayText .= '<div class="text-xs text-gray-500">ИНН: ' . $inn . '</div>';
+                                        $displayText .= '</div>';
+                                        
+                                        // Сохраняем в формате: "Название|ИНН|Адрес"
+                                        $options[$name . '|' . $inn . '|' . $address] = $displayText;
+                                    }
+                                }
+
+                                return $options;
+                            })
+                            ->afterStateUpdated(function ($state, $set) {
+                                if ($state) {
+                                    $parts = explode('|', $state);
+                                    if (count($parts) >= 2) {
+                                        $set('client_name', $parts[0]); // Название
+                                        $set('client_inn', $parts[1]);  // ИНН
+                                    }
+                                }
+                            })
+                            ->helperText('Начните вводить название или ИНН организации')
+                            ->columnSpanFull()
+                            ->allowHtml(),
+
+                        Forms\Components\Hidden::make('client_inn'),
+
                     ])->columns(4),
                 
                 // Forms\Components\Section::make('Финансовая информация')

@@ -49,6 +49,7 @@ class Trip extends Model
         'telegram_sent',
         'telegram_sent_at',
         'telegram_sent_count',
+        'client_inn'
     ];
 
     protected $casts = [
