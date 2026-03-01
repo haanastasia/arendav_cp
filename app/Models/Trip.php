@@ -188,4 +188,10 @@ class Trip extends Model
     {
         return !empty($this->document) && count($this->document) > 0;
     }
+
+    // Заказчик
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
 }

@@ -60,9 +60,15 @@ class TelegramGroupService
         
         $message .= "📍 <b>Дата:</b> " . $trip->date . "\n";
         $message .= "📍 <b>Информация:</b> " . $trip->type_t . " " . $trip->car_number . "\n";
-        if ($trip->client_name) {
-            $message .= "👨‍💼 <b>Заказчик:</b> " . $trip->client_name . " (" . $trip->client_inn . ") \n";
+        if (!empty($trip->height)) {
+            $message .= "📍 <b>Высота:</b> " . $trip->height . "\n";
         }
+         
+        $clientName = $this->getClientName($trip);
+        if (!empty($clientName)) {
+            $message .= "👨‍💼 <b>Заказчик:</b> " . $clientName . "\n";
+        }
+
         $message .= "\n🕐 <i>Принято через бота:</i> " . Carbon::now('Europe/Moscow')->format('H:i:s');
         
         return $this->send($message);
@@ -74,7 +80,13 @@ class TelegramGroupService
         $message = "📎 <b>Водитель {$driver->name} прикрепил путевой лист</b>\n\n";
         $message .= "📋 <b>Заявка:</b> #{$trip->id}\n";
         $message .= "📍 <b>Информация:</b> " . $trip->type_t . " " . $trip->car_number . "\n";
-
+        if (!empty($trip->height)) {
+            $message .= "📍 <b>Высота:</b> " . $trip->height . "\n";
+        }
+        $clientName = $this->getClientName($trip);
+        if (!empty($clientName)) {
+            $message .= "👨‍💼 <b>Заказчик:</b> " . $clientName . "\n";
+        }
         $message .= "\n🕐 <i>Прикреплено через бота:</i> " . Carbon::now('Europe/Moscow')->format('H:i:s');
         
         return $this->send($message);
@@ -94,9 +106,13 @@ class TelegramGroupService
         }
 
         $message .= "📍 <b>Информация:</b> " . $trip->type_t . " " . $trip->car_number . "\n";
+        if (!empty($trip->height)) {
+            $message .= "📍 <b>Высота:</b> " . $trip->height . "\n";
+        }
          
-        if ($trip->client_name) {
-            $message .= "👨‍💼 <b>Заказчик:</b> " . $trip->client_name . " (" . $trip->client_inn . ") \n";
+        $clientName = $this->getClientName($trip);
+        if (!empty($clientName)) {
+            $message .= "👨‍💼 <b>Заказчик:</b> " . $clientName . "\n";
         }
 
         $message .= "\n🕐 <i>Отменена:</i> " . Carbon::now('Europe/Moscow')->format('H:i:s');
@@ -114,7 +130,14 @@ class TelegramGroupService
         }
 
         $message .= "📍 <b>Информация:</b> " . $trip->type_t . " " . $trip->car_number . "\n";
-        
+        if (!empty($trip->height)) {
+            $message .= "📍 <b>Высота:</b> " . $trip->height . "\n";
+        }
+
+        $clientName = $this->getClientName($trip);
+        if (!empty($clientName)) {
+            $message .= "👨‍💼 <b>Заказчик:</b> " . $clientName . "\n";
+        }
         $message .= "\n🕐 <i>Статус изменен:</i> " . Carbon::now('Europe/Moscow')->format('H:i:s');
         
         return $this->send($message);
@@ -131,5 +154,21 @@ class TelegramGroupService
         $message .= "🕐 " . now()->format('d.m.Y H:i:s');
         
         return $this->send($message);
+    }
+
+    /**
+     * Получить название заказчика
+     */
+    private function getClientName($trip): string
+    {
+        if ($trip->client) {
+            return $trip->client->name;
+        }
+        
+        if (!empty($trip->client_name)) {
+            return $trip->client_name;
+        }
+        
+        return '';
     }
 }

@@ -24,6 +24,8 @@ use Filament\Notifications\Notification;
 use MoveMoveIo\DaData\Enums\CompanyStatus;
 use MoveMoveIo\DaData\Enums\CompanyType;
 use MoveMoveIo\DaData\Facades\DaDataCompany;
+use App\Models\Client;
+use Filament\Forms\Components\Actions\Action;
 
 class TripResource extends Resource
 {
@@ -163,53 +165,139 @@ class TripResource extends Resource
                             ->label('№ авто')
                             ->maxLength(255),
 
-                        Forms\Components\Select::make('client_name')
+                        Forms\Components\Select::make('client_id')
                             ->label('Заказчик')
+                            ->relationship('client', 'name')
                             ->searchable()
+                            ->preload()
                             ->getSearchResultsUsing(function (string $search): array {
-                                if (strlen($search) < 2) {
-                                    return [];
-                                }
+                                return Client::query()
+                                    ->where('name', 'like', "%{$search}%")
+                                    ->orWhere('inn', 'like', "%{$search}%")
+                                    ->limit(10)
+                                    ->get()
+                                    ->mapWithKeys(fn ($client) => [
+                                        $client->id => $client->name . ($client->inn ? ' (ИНН: ' . $client->inn . ')' : '')
+                                    ])
+                                    ->toArray();
+                            })
+                            ->getOptionLabelUsing(fn ($value): ?string => 
+                                Client::find($value)?->name . (Client::find($value)?->inn ? ' (ИНН: ' . Client::find($value)?->inn . ')' : '')
+                            )
+                            ->suffixAction(
+                                Action::make('create')
+                                    ->label('Создать заказчика')
+                                    ->icon('heroicon-o-plus')
+                                    ->form([
+                                        Forms\Components\Section::make('🔍 Поиск организации')
+                                            ->schema([
+                                                Forms\Components\Select::make('company_search')
+                                                    ->label('')
+                                                    ->searchable()
+                                                    ->placeholder('Начните вводить название или ИНН организации...')
+                                                    ->getSearchResultsUsing(function (string $search): array {
+                                                        if (strlen($search) < 2) {
+                                                            return [];
+                                                        }
 
-                                $suggestions = DaDataCompany::prompt($search, 5, [CompanyStatus::ACTIVE], 2 );
+                                                        $suggestions = DaDataCompany::prompt($search, 5, [CompanyStatus::ACTIVE], 2);
 
-                                $options = [];
-                                foreach ($suggestions['suggestions'] ?? [] as $suggestion) {
-                                    $inn = $suggestion['data']['inn'] ?? '';
-                                    $name = $suggestion['value'] ?? '';
-                                    $address = $suggestion['data']['address']['value'] ?? '';
-                                    
-                                    if (!empty($inn) && !empty($name)) {
-                                        // Формируем отображение с адресом на новой строке
-                                        $displayText = '<div class="flex flex-col">';
-                                        $displayText .= '<div class="font-medium">' . $name . '</div>';
-                                        if ($address) {
-                                            $displayText .= '<div class="text-xs text-gray-500">📍 ' . $address . '</div>';
-                                        }
-                                        $displayText .= '<div class="text-xs text-gray-500">ИНН: ' . $inn . '</div>';
-                                        $displayText .= '</div>';
+                                                        $options = [];
+                                                        foreach ($suggestions['suggestions'] ?? [] as $suggestion) {
+                                                            $inn = $suggestion['data']['inn'] ?? '';
+                                                            $name = $suggestion['value'] ?? '';
+                                                            $address = $suggestion['data']['address']['value'] ?? '';
+                                                            
+                                                            if (!empty($inn) && !empty($name)) {
+                                                                $displayText = '<div class="flex flex-col">';
+                                                                $displayText .= '<div class="font-medium">' . $name . '</div>';
+                                                                if ($address) {
+                                                                    $displayText .= '<div class="text-xs text-gray-500">📍 ' . $address . '</div>';
+                                                                }
+                                                                $displayText .= '<div class="text-xs text-gray-500">ИНН: ' . $inn . '</div>';
+                                                                $displayText .= '</div>';
+                                                                
+                                                                $options[$name . '|' . $inn . '|' . $address] = $displayText;
+                                                            }
+                                                        }
+
+                                                        return $options;
+                                                    })
+                                                    ->afterStateUpdated(function ($state, callable $set) {
+                                                        if ($state) {
+                                                            $parts = explode('|', $state);
+                                                            if (count($parts) >= 2) {
+                                                                $set('type', strlen($parts[1]) === 12 ? 'individual' : 'legal');
+                                                                $set('name', $parts[0]);
+                                                                $set('inn', $parts[1]);
+                                                                if (isset($parts[2])) {
+                                                                    $set('address', $parts[2]);
+                                                                }
+                                                            }
+                                                        }
+                                                    })
+                                                    ->allowHtml()
+                                                    ->columnSpanFull()
+                                                    ->reactive(),
+                                            ])
+                                            ->compact(),
                                         
-                                        // Сохраняем в формате: "Название|ИНН|Адрес"
-                                        $options[$name . '|' . $inn . '|' . $address] = $displayText;
-                                    }
-                                }
-
-                                return $options;
-                            })
-                            ->afterStateUpdated(function ($state, $set) {
-                                if ($state) {
-                                    $parts = explode('|', $state);
-                                    if (count($parts) >= 2) {
-                                        $set('client_name', $parts[0]); // Название
-                                        $set('client_inn', $parts[1]);  // ИНН
-                                    }
-                                }
-                            })
-                            ->helperText('Начните вводить название или ИНН организации')
-                            ->columnSpanFull()
-                            ->allowHtml(),
-
-                        Forms\Components\Hidden::make('client_inn'),
+                                        Forms\Components\Section::make('Данные заказчика')
+                                            ->schema([
+                                                Forms\Components\Select::make('type')
+                                                    ->label('Тип')
+                                                    ->options(Client::getTypes())
+                                                    ->default('legal')
+                                                    ->required(),
+                                                
+                                                Forms\Components\TextInput::make('name')
+                                                    ->label('Название / ФИО')
+                                                    ->required()
+                                                    ->maxLength(255),
+                                                
+                                                Forms\Components\TextInput::make('inn')
+                                                    ->label('ИНН')
+                                                    ->maxLength(12)
+                                                    ->unique(),
+                                                
+                                                Forms\Components\TextInput::make('address')
+                                                    ->label('Адрес')
+                                                    ->maxLength(255),
+                                                
+                                                Forms\Components\TextInput::make('phone')
+                                                    ->label('Телефон')
+                                                    ->tel()
+                                                    ->mask('+7 (999) 999-99-99')
+                                                    ->placeholder('+7 (___) ___-__-__')
+                                                    ->maxLength(30)
+                                                    ->nullable()
+                                                    ->unique(ignoreRecord: true)
+                                                    ->stripCharacters(['(', ')', '-', ' '])                            
+                                                    ->validationMessages([
+                                                        'unique' => 'Этот номер телефона уже используется'
+                                                    ]),
+                                                
+                                                Forms\Components\TextInput::make('email')
+                                                    ->label('Email')
+                                                    ->email(),
+                                            ])
+                                            ->columns(2),
+                                    ])
+                                    ->action(function (array $data, $set) {
+                                        unset($data['company_search']);
+                                        $client = Client::create($data);
+                                        
+                                        $set('client_id', $client->id);
+                                        
+                                        Notification::make()
+                                            ->title('✅ Заказчик создан и привязан')
+                                            ->body($client->name)
+                                            ->success()
+                                            ->send();
+                                    })
+                            )
+                            ->helperText('Выберите заказчика из списка или создайте нового')
+                            ->columnSpanFull(),
 
                     ])->columns(4),
                 

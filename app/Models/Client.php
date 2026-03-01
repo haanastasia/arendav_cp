@@ -2,31 +2,43 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
 {
+    use SoftDeletes;
+    
     protected $fillable = [
+        'type',
         'name',
-        'full_name',
         'inn',
-        'kpp', 
-        'ogrn',
-        'address',
-        'email',
         'phone',
-        'type', // LEGAL, INDIVIDUAL
+        'email',
+        'address',
         'status',
-        'source', // dadata, manual
-        'data', // JSON с полными данными
+        'comment',
+        'client_data',
     ];
     
     protected $casts = [
-        'data' => 'array',
-        'address' => 'array',
+        'client_data' => 'array',
     ];
     
+    // Типы клиентов
+    const TYPE_LEGAL = 'legal';
+    const TYPE_INDIVIDUAL = 'individual';
+    
+    public static function getTypes(): array
+    {
+        return [
+            self::TYPE_LEGAL => 'Юридическое лицо',
+            self::TYPE_INDIVIDUAL => 'Физическое лицо',
+        ];
+    }
+    
+    // Связь с заявками 
     public function trips()
     {
-        return $this->hasMany(Trip::class, 'client_id');
+        return $this->hasMany(Trip::class);
     }
 }
